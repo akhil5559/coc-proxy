@@ -3,11 +3,27 @@ import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
-const TOKEN = process.env.COC_TOKEN; // Clash API Token from Render Environment Variable
+const TOKEN = process.env.COC_TOKEN;
+
+// Debug log for token
+console.log("COC_TOKEN:", TOKEN ? "✅ Loaded" : "❌ MISSING!");
+
+// Welcome page for "/"
+app.get("/", (req, res) => {
+  res.send("✅ COC Proxy is running! Use /v1/... for Clash API or /checkip to get IP.");
+});
 
 // Clash API Proxy route
 app.get("/v1/*", async (req, res) => {
   try {
+    // Check if token is missing
+    if (!TOKEN) {
+      return res.status(401).json({
+        error: "Missing COC_TOKEN",
+        details: "Please set COC_TOKEN environment variable in Render"
+      });
+    }
+
     const url = `https://api.clashofclans.com/${req.url}`;
     const response = await fetch(url, {
       headers: { Authorization: `Bearer ${TOKEN}` }
@@ -45,5 +61,4 @@ app.get("/checkip", async (req, res) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => console.log(`Proxy running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Proxy running on ${PORT}`));
